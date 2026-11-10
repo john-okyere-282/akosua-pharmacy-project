@@ -105,8 +105,10 @@ This violates the **Open-Closed Principle**: adding one new category requires te
 ---
 
 ## 5. Planned Rebuilt Architecture
+*(Note: this is the final version matching the rebuilt codebase; the original plan is in git history)*
 
 I designed the rebuilt system around clear domain responsibilities, complete immutability where appropriate, guarded invariants, and polymorphism for medication categories.
+
 
 ```mermaid
 classDiagram

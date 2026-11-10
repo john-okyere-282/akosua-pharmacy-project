@@ -1,5 +1,8 @@
 # ADR-004: Money Representation and Output Fidelity
 
+## Decision in Plain Words
+> I created an immutable `Money` value object that wraps a `double` internally. Its `toString()` method delegates to `Double.toString()` so that console outputs (`25.0`, `28.5`) match Akosua's original receipts byte for byte.
+
 ## Context
 The legacy application used IEEE 754 binary floating-point `double` for prices and totals (`12.50`, `30.00`, `25.0`, `28.5`, `3000.0`). While binary floating-point accumulates rounding errors over long periods, the lab specification mandates strict output preservation against `baseline/original-output.txt`.
 
@@ -8,13 +11,18 @@ The legacy application used IEEE 754 binary floating-point `double` for prices a
 2. **`BigDecimal`**: The standard financial choice for commercial banking. However, `BigDecimal.toString()` formats numbers differently (e.g. `25.00` or `28.50`), which directly breaks the baseline output contract (`25.0`, `28.5`).
 3. **Custom Immutable `Money` Value Type (Chosen)**: A lightweight domain value object wrapping a `double`, whose `toString()` delegates exactly to `Double.toString(amount)`.
 
-## Decision
-I chose Option 3: a custom immutable `Money` value type.
+## Decision Diagram
 
-Arithmetic is kept in the exact sequence as the original: `(price * qty)` calculated first, followed by `* 0.95` for registered customers. `Money.toString()` prints byte-identically to Java's original `double` formatting.
+```mermaid
+flowchart LR
+    Money["Money Value Object<br/>- amount: double"] --> Multiply["multiply(qty): Money<br/>Preserves: price * qty"]
+    Money --> Discount["applyDiscount(mult): Money<br/>Preserves: total * 0.95"]
+    Money --> ToString["toString(): String<br/>Delegates to Double.toString()<br/>Produces: '25.0', '28.5'"]
+```
 
-I deliberately did NOT switch to `BigDecimal` in this iteration because preserving the legacy output contract is a hard requirement. I document `BigDecimal` with integer minor units (pesewas) as a future production improvement.
+## Before vs After Comparison
+- **Before**: `double total = m.price * qty; if (registered) total = total * 0.95; System.out.println("for GHS " + total);`
+- **After**: `Money total = m.price().multiply(qty).applyDiscount(c.discountMultiplier());`
 
-## Consequences & Trade-offs
-- **Positive**: Prevents primitive obsession, provides clear domain vocabulary (`money.multiply(qty)`, `money.applyDiscount(multiplier)`), and ensures 100% byte compatibility with baseline output.
-- **Accepted Trade-off**: Retains underlying floating-point precision characteristics of the original program.
+## Accepted Trade-off
+I accepted the precision limits of binary `double` for this version to preserve exact output compatibility; a commercial migration to `BigDecimal` with integer minor units is documented as a future enhancement.
