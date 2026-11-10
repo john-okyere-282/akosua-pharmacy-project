@@ -1,28 +1,61 @@
 package pharmacy.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 /**
- * Legacy Medication model extracted to pharmacy.model in Step 1.
+ * Sealed abstract base class for all pharmacy medications.
  * 
- * Engineering Note:
- * Previous Defect (Rank 1): public int stock was completely unguarded and mutable by any caller.
- * In subsequent build steps, this will be replaced by an immutable StockLevel and a sealed hierarchy.
+ * Engineering Decision (ADR-001 & ADR-002):
+ * Previous Defect (Rank 1 & 7): Public mutable stock and String-typed category.
+ * Stock is held privately with no setters. Category behavior is polymorphic.
  */
-public class Medication {
-    public String name;
-    public double price;
-    public int stock;
-    public String category; // "OTC" or "PRESCRIPTION"
-    public int id;
-    public static int counter = 1;
+public abstract sealed class Medication permits OtcMedication, PrescriptionMedication {
+    private final int id;
+    private final String name;
+    private final Money price;
+    private int stock;
 
-    public Medication(String name, double price, int stock, String category) {
-        this.id = counter++;
-        this.name = name;
-        this.price = price;
-        this.stock = stock;
-        this.category = category;
+    protected Medication(int id, String name, Money price, int initialStock) {
+        this.id = id;
+        this.name = Objects.requireNonNull(name, "Medication name cannot be null");
+        this.price = Objects.requireNonNull(price, "Price cannot be null");
+        this.stock = initialStock;
+    }
+
+    public int id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public Money price() {
+        return price;
+    }
+
+    public int currentStock() {
+        return stock;
+    }
+
+    public boolean hasSufficientStock(int qty) {
+        return qty > 0 && this.stock >= qty;
+    }
+
+    public void deductStock(int qty) {
+        this.stock -= qty;
+    }
+
+    public void addStock(int qty) {
+        this.stock += qty;
+    }
+
+    public abstract String categoryName();
+
+    public abstract boolean requiresPrescriber();
+
+    @Override
+    public String toString() {
+        return name + " (" + categoryName() + "): " + stock + " in stock";
     }
 }
