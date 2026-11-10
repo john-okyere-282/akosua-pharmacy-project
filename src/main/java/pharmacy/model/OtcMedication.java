@@ -6,12 +6,12 @@ package pharmacy.model;
  */
 public final class OtcMedication extends Medication {
 
-    public OtcMedication(int id, String name, Money price, int initialStock) {
+    public OtcMedication(int id, String name, Money price, StockLevel initialStock) {
         super(id, name, price, initialStock);
     }
 
     public OtcMedication(String name, double price, int initialStock) {
-        super(1, name, Money.of(price), initialStock);
+        super(1, name, Money.of(price), StockLevel.of(initialStock));
     }
 
     @Override

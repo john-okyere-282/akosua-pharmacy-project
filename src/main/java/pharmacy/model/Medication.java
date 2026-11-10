@@ -5,21 +5,22 @@ import java.util.Objects;
 /**
  * Sealed abstract base class for all pharmacy medications.
  * 
- * Engineering Decision (ADR-001 & ADR-002):
+ * Engineering Decisions (ADR-001 & ADR-002):
  * Previous Defect (Rank 1 & 7): Public mutable stock and String-typed category.
- * Stock is held privately with no setters. Category behavior is polymorphic.
+ * Stock is held privately as an immutable StockLevel with no setters.
+ * Invariant enforcement: Stock cannot become negative.
  */
 public abstract sealed class Medication permits OtcMedication, PrescriptionMedication {
     private final int id;
     private final String name;
     private final Money price;
-    private int stock;
+    private StockLevel stock;
 
-    protected Medication(int id, String name, Money price, int initialStock) {
+    protected Medication(int id, String name, Money price, StockLevel initialStock) {
         this.id = id;
         this.name = Objects.requireNonNull(name, "Medication name cannot be null");
         this.price = Objects.requireNonNull(price, "Price cannot be null");
-        this.stock = initialStock;
+        this.stock = Objects.requireNonNull(initialStock, "Initial stock cannot be null");
     }
 
     public int id() {
@@ -35,19 +36,19 @@ public abstract sealed class Medication permits OtcMedication, PrescriptionMedic
     }
 
     public int currentStock() {
-        return stock;
+        return stock.units();
     }
 
     public boolean hasSufficientStock(int qty) {
-        return qty > 0 && this.stock >= qty;
+        return stock.hasSufficient(qty);
     }
 
     public void deductStock(int qty) {
-        this.stock -= qty;
+        this.stock = this.stock.deduct(qty);
     }
 
     public void addStock(int qty) {
-        this.stock += qty;
+        this.stock = this.stock.add(qty);
     }
 
     public abstract String categoryName();
@@ -56,6 +57,6 @@ public abstract sealed class Medication permits OtcMedication, PrescriptionMedic
 
     @Override
     public String toString() {
-        return name + " (" + categoryName() + "): " + stock + " in stock";
+        return name + " (" + categoryName() + "): " + stock.units() + " in stock";
     }
 }

@@ -12,11 +12,12 @@ import pharmacy.service.DispenseResult;
 import pharmacy.service.DispenseSuccess;
 
 /**
- * Pharmacy coordinator (Step 7: DispenseResult, DispenseReporter, encapsulated unmodifiable views).
+ * Pharmacy coordinator (Step 8: Enforcing the stock and quantity invariants).
  * 
- * Engineering Decisions (ADR-005, ADR-006, ADR-007):
- * Previous Defect (Rank 4 & 5): God class with leaked mutable collections.
- * Collections are private, getters return unmodifiable views, and console I/O is delegated to DispenseReporter.
+ * Engineering Invariant Enforcements:
+ * - Over-dispensing is rejected. Stock remains untouched.
+ * - Quantities <= 0 are rejected for both dispense and restock.
+ * - On rejection: NO customer history and NO transaction are recorded.
  */
 public class Pharmacy {
     private final String name;
@@ -47,6 +48,12 @@ public class Pharmacy {
         customers.add(Objects.requireNonNull(c, "Customer cannot be null"));
     }
 
+    /**
+     * Dispenses medicine to a customer adhering strictly to domain checks in order:
+     * 1. Prescriber requirement check (null-only preserved)
+     * 2. Positive quantity check
+     * 3. Stock sufficiency check
+     */
     public DispenseResult dispense(Customer c, Medication m, int qty, String prescriber) {
         // 1. Prescriber check (null-only check preserved per brief)
         if (m.requiresPrescriber() && prescriber == null) {
@@ -55,27 +62,50 @@ public class Pharmacy {
             return rejected;
         }
 
-        // 2. Pricing calculation: order preserved (price * qty), then discount from customer
+        // 2. Quantity validity check
+        if (qty <= 0) {
+            DispenseResult rejected = new DispenseRejected("Cannot dispense " + m.name() + ": quantity must be positive");
+            reporter.reportDispense(rejected);
+            return rejected;
+        }
+
+        // 3. Stock sufficiency invariant check
+        if (!m.hasSufficientStock(qty)) {
+            DispenseResult rejected = new DispenseRejected(
+                    "Cannot dispense " + m.name() + ": only " + m.currentStock() + " in stock, requested " + qty
+            );
+            reporter.reportDispense(rejected);
+            return rejected;
+        }
+
+        // 4. Pricing calculation: order preserved (price * qty), then discount from customer
         Money total = m.price().multiply(qty);
         if (c.discountMultiplier() < 1.0) {
             total = total.applyDiscount(c.discountMultiplier());
         }
 
-        // 3. Stock deduction
+        // 5. Stock deduction (in exactly ONE place)
         m.deductStock(qty);
 
-        // 4. Audit recording
+        // 6. Audit recording (only on success)
         c.recordHistory("Got " + qty + " x " + m.name());
         String recordedPrescriber = m.requiresPrescriber() ? prescriber : null;
         transactions.add(new Transaction(nextTransactionId++, c.name(), m.name(), qty, total.amount(), "DISPENSE", recordedPrescriber));
 
-        // 5. Success reporting
+        // 7. Success reporting
         DispenseResult success = new DispenseSuccess(c, m, qty, recordedPrescriber, total);
         reporter.reportDispense(success);
         return success;
     }
 
+    /**
+     * Restocks medicine with positive quantity check.
+     */
     public void restock(Medication m, int qty) {
+        if (qty <= 0) {
+            System.out.println("Cannot restock " + m.name() + ": quantity must be positive");
+            return;
+        }
         m.addStock(qty);
         transactions.add(new Transaction(nextTransactionId++, "(supplier)", m.name(), qty, 0, "RESTOCK", null));
         reporter.reportRestock(m, qty);

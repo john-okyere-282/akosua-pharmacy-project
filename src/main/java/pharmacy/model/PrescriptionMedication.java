@@ -6,12 +6,12 @@ package pharmacy.model;
  */
 public final class PrescriptionMedication extends Medication {
 
-    public PrescriptionMedication(int id, String name, Money price, int initialStock) {
+    public PrescriptionMedication(int id, String name, Money price, StockLevel initialStock) {
         super(id, name, price, initialStock);
     }
 
     public PrescriptionMedication(String name, double price, int initialStock) {
-        super(2, name, Money.of(price), initialStock);
+        super(2, name, Money.of(price), StockLevel.of(initialStock));
     }
 
     @Override
