@@ -2,11 +2,13 @@ import pharmacy.model.Customer;
 import pharmacy.model.Medication;
 import pharmacy.model.OtcMedication;
 import pharmacy.model.PrescriptionMedication;
+import pharmacy.model.RegisteredCustomer;
+import pharmacy.model.WalkInCustomer;
 
 /**
  * Akosua's Pharmacy - stock and dispensing tracker.
  * 
- * Step 3: Medication hierarchy introduced with private guarded stock and no public setters.
+ * Step 4: Customer hierarchy with discount ownership and encapsulated read-only history.
  */
 public class PharmacyTracker {
 
@@ -18,9 +20,8 @@ public class PharmacyTracker {
         p.addMedication(paracetamol);
         p.addMedication(amoxicillin);
 
-        Customer kofi = new Customer("Kofi Mensah", "WALK_IN");
-        Customer ama = new Customer("Ama Owusu", "REGISTERED");
-        ama.phone = "0244 000 000"; // registered patients have contact details on file
+        Customer kofi = new WalkInCustomer("Kofi Mensah");
+        Customer ama = new RegisteredCustomer("Ama Owusu", "0244 000 000"); // registered patients have contact details on file
         p.addCustomer(kofi);
         p.addCustomer(ama);
 

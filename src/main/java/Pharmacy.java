@@ -5,7 +5,7 @@ import pharmacy.model.Medication;
 import pharmacy.model.Transaction;
 
 /**
- * Pharmacy coordinator (Step 3: using Medication hierarchy).
+ * Pharmacy coordinator (Step 4: Customer hierarchy with discount owned by type).
  */
 public class Pharmacy {
     public String name;
@@ -29,11 +29,11 @@ public class Pharmacy {
         double total = 0;
         if (m.categoryName().equals("OTC")) {
             total = m.price().amount() * qty;
-            if (c.kind.equals("REGISTERED")) {
-                total = total * 0.95;
+            if (c.discountMultiplier() < 1.0) {
+                total = total * c.discountMultiplier();
             }
             m.deductStock(qty);
-            System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name
+            System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name()
                     + " for GHS " + total);
         } else if (m.categoryName().equals("PRESCRIPTION")) {
             if (prescriber == null) {
@@ -41,15 +41,15 @@ public class Pharmacy {
                 return;
             }
             total = m.price().amount() * qty;
-            if (c.kind.equals("REGISTERED")) {
-                total = total * 0.95;
+            if (c.discountMultiplier() < 1.0) {
+                total = total * c.discountMultiplier();
             }
             m.deductStock(qty);
-            System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name
+            System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name()
                     + " (prescribed by " + prescriber + ") for GHS " + total);
         }
-        c.history.add("Got " + qty + " x " + m.name());
-        transactions.add(new Transaction(c.name, m.name(), qty, total, "DISPENSE"));
+        c.recordHistory("Got " + qty + " x " + m.name());
+        transactions.add(new Transaction(c.name(), m.name(), qty, total, "DISPENSE"));
     }
 
     public void restock(Medication m, int qty) {
