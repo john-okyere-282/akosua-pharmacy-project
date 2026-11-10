@@ -2,10 +2,11 @@ import java.util.ArrayList;
 import java.util.List;
 import pharmacy.model.Customer;
 import pharmacy.model.Medication;
+import pharmacy.model.Money;
 import pharmacy.model.Transaction;
 
 /**
- * Pharmacy coordinator (Step 5: Immutable Transaction record and instance-scoped IDs).
+ * Pharmacy coordinator (Step 6: Dispensing rules extracted, unified stock deduction, no category if/else).
  */
 public class Pharmacy {
     public String name;
@@ -27,33 +28,30 @@ public class Pharmacy {
     }
 
     public void dispense(Customer c, Medication m, int qty, String prescriber) {
-        double total = 0;
-        String recordedPrescriber = null;
-
-        if (m.categoryName().equals("OTC")) {
-            total = m.price().amount() * qty;
-            if (c.discountMultiplier() < 1.0) {
-                total = total * c.discountMultiplier();
-            }
-            m.deductStock(qty);
-            System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name()
-                    + " for GHS " + total);
-        } else if (m.categoryName().equals("PRESCRIPTION")) {
-            if (prescriber == null) {
-                System.out.println("Cannot dispense " + m.name() + " without a prescriber");
-                return;
-            }
-            recordedPrescriber = prescriber;
-            total = m.price().amount() * qty;
-            if (c.discountMultiplier() < 1.0) {
-                total = total * c.discountMultiplier();
-            }
-            m.deductStock(qty);
-            System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name()
-                    + " (prescribed by " + prescriber + ") for GHS " + total);
+        // 1. Check prescriber requirement polymorphically (no category strings)
+        if (m.requiresPrescriber() && prescriber == null) {
+            System.out.println("Cannot dispense " + m.name() + " without a prescriber");
+            return;
         }
+
+        // 2. Pricing calculation: order preserved (price * qty), then discount from customer type
+        Money total = m.price().multiply(qty);
+        if (c.discountMultiplier() < 1.0) {
+            total = total.applyDiscount(c.discountMultiplier());
+        }
+
+        // 3. Stock deduction exists in exactly ONE place
+        m.deductStock(qty);
+
+        // 4. Console reporting without category if/else
+        String prescriberPart = m.requiresPrescriber() ? " (prescribed by " + prescriber + ")" : "";
+        System.out.println("Dispensed " + qty + " x " + m.name() + " to " + c.name()
+                + prescriberPart + " for GHS " + total);
+
+        // 5. Audit recording
         c.recordHistory("Got " + qty + " x " + m.name());
-        transactions.add(new Transaction(nextTransactionId++, c.name(), m.name(), qty, total, "DISPENSE", recordedPrescriber));
+        String recordedPrescriber = m.requiresPrescriber() ? prescriber : null;
+        transactions.add(new Transaction(nextTransactionId++, c.name(), m.name(), qty, total.amount(), "DISPENSE", recordedPrescriber));
     }
 
     public void restock(Medication m, int qty) {
