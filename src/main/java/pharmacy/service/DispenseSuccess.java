@@ -6,7 +6,13 @@ import pharmacy.model.Medication;
 import pharmacy.model.Money;
 
 /**
- * Successful dispense result record.
+ * Represents a successful dispense operation where inventory was decremented and payment calculated.
+ *
+ * <p><b>Why this exists:</b> Carries the verified details of a completed transaction so the reporter
+ * can format the confirmation message without recalculating business rules.
+ *
+ * <p><b>Real Scenario:</b>
+ * Kofi buys 2 Paracetamol 500mg: holds customer=Kofi, med=Paracetamol, qty=2, prescriber=null, total=GHS 25.0.
  */
 public record DispenseSuccess(
         Customer customer,
@@ -15,6 +21,7 @@ public record DispenseSuccess(
         String prescriber,
         Money total
 ) implements DispenseResult {
+
     public DispenseSuccess {
         Objects.requireNonNull(customer, "Customer cannot be null");
         Objects.requireNonNull(medication, "Medication cannot be null");
@@ -26,4 +33,3 @@ public record DispenseSuccess(
         return true;
     }
 }
-

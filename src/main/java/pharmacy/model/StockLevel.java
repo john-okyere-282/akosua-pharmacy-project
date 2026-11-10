@@ -3,16 +3,29 @@ package pharmacy.model;
 import java.util.Objects;
 
 /**
- * Immutable value type encapsulating inventory stock quantities.
- * 
- * Engineering Decision (ADR-002):
- * Previous Defect (Rank 1): Unvalidated int field allowed stock to plummet to -61.
- * StockLevel makes negative inventory unrepresentable in memory by throwing
- * an IllegalArgumentException whenever units < 0.
+ * A quantity of medication that can never be less than zero.
+ *
+ * <p><b>Why this exists:</b> In the original code, stock was a plain number that could
+ * become negative if someone dispensed more than was on the shelf. This value object
+ * makes a negative stock count impossible to represent in memory.
+ *
+ * <p><b>Real Scenario:</b>
+ * The pharmacy has 40 bottles of Amoxicillin. Ama dispenses 1 bottle, leaving 39.
+ * When Kofi requests 100 bottles, the system checks whether 39 is enough. Because 39 < 100,
+ * the deduction is refused and stock remains safely at 39 (the old program dropped to -61).
+ *
+ * <p><b>Java feature note:</b> A <i>value object</i> is an immutable class whose identity is
+ * defined entirely by its data, not by a memory address or ID.
  */
 public final class StockLevel {
+
+    // A private field: hidden from the outside world so callers cannot tamper with the count directly.
     private final int units;
 
+    /**
+     * Constructor validation: ensures invalid objects can never be constructed.
+     * If units < 0, creation is rejected immediately with an IllegalArgumentException.
+     */
     public StockLevel(int units) {
         if (units < 0) {
             throw new IllegalArgumentException("Stock level cannot be negative: " + units);
@@ -29,15 +42,17 @@ public final class StockLevel {
     }
 
     /**
-     * Determines whether there are sufficient units available for the requested quantity.
+     * Decision: Check sufficiency BEFORE any deduction occurs.
+     * Rule: If current stock is 39 and request is 100, hasSufficient(100) returns false.
      */
     public boolean hasSufficient(int qty) {
         return qty > 0 && this.units >= qty;
     }
 
     /**
-     * Returns a new StockLevel decremented by qty.
-     * Enforces the non-negative invariant.
+     * Decision: Deductions produce a brand new StockLevel rather than mutating this instance.
+     * Rule: If qty <= 0, rejected. If qty > available, throws IllegalStateException.
+     * Example: 40.deduct(1) -> returns new StockLevel(39).
      */
     public StockLevel deduct(int qty) {
         if (qty <= 0) {
@@ -50,7 +65,8 @@ public final class StockLevel {
     }
 
     /**
-     * Returns a new StockLevel incremented by qty.
+     * Decision: Restock additions must also be positive.
+     * Example: 100.add(50) -> returns new StockLevel(150).
      */
     public StockLevel add(int qty) {
         if (qty <= 0) {
@@ -76,4 +92,3 @@ public final class StockLevel {
         return String.valueOf(units);
     }
 }
-

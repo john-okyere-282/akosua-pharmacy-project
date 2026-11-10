@@ -19,9 +19,15 @@ import pharmacy.model.WalkInCustomer;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Comprehensive verification test suite for Akosua's Pharmacy.
- * Located in pharmacy.service matching the package of Pharmacy.
- * Covers totals, discounts, invariants, encapsulation, and open-closed extensibility.
+ * Verification test suite for Akosua's Pharmacy.
+ *
+ * <p><b>Why this exists:</b> Provides an automated safety net proving totals calculation, loyalty
+ * discounts, inventory invariant enforcement (stock never below zero), encapsulation, and open-closed
+ * extensibility.
+ *
+ * <p><b>Key Scenario Tested:</b>
+ * Verifies that dispensing 100 units from a stock of 40 (or 39) is rejected, leaving stock intact
+ * and writing zero transaction logs or customer history.
  */
 class PharmacyTest {
 
@@ -47,6 +53,10 @@ class PharmacyTest {
         pharmacy.addCustomer(ama);
     }
 
+    /**
+     * Scenario: Kofi (walk-in) buys 2 Paracetamol at GHS 12.50 -> GHS 25.0.
+     * Ama (registered) buys 1 Amoxicillin at GHS 30.00 -> 5% off -> GHS 28.5.
+     */
     @Test
     @DisplayName("1. Characterization: Totals calculation and 5% registered discount")
     void testTotalsAndDiscount() {
@@ -65,6 +75,10 @@ class PharmacyTest {
         assertEquals("28.5", s2.total().toString());
     }
 
+    /**
+     * Scenario: Attempting to dispense prescription-only Amoxicillin without a doctor.
+     * Rule: Rejected with exact legacy message, leaving stock and audit trails completely unchanged.
+     */
     @Test
     @DisplayName("2. Missing prescriber on prescription medicine is rejected cleanly")
     void testMissingPrescriberRejected() {
@@ -81,6 +95,10 @@ class PharmacyTest {
         assertTrue(kofi.history().isEmpty(), "No history recorded on rejection");
     }
 
+    /**
+     * Scenario: Restocking 50 units of Paracetamol.
+     * Rule: Increases stock to 150 and records a RESTOCK transaction with price 0.
+     */
     @Test
     @DisplayName("3. Restock increases stock and creates supplier transaction")
     void testRestock() {
@@ -99,10 +117,13 @@ class PharmacyTest {
         assertNull(tx.prescriber());
     }
 
+    /**
+     * Scenario: Over-dispensing Amoxicillin (stock=40, request=100).
+     * Rule: Rejected, stock stays 40 (old code dropped to -61), no transaction logged.
+     */
     @Test
     @DisplayName("4. Over-dispense is rejected with stock unchanged and no transaction")
     void testOverDispenseRejected() {
-        // Amoxicillin has 40 units. Request 100 units.
         DispenseResult result = pharmacy.dispense(kofi, amoxicillin, 100, "Dr. Boateng");
         assertInstanceOf(DispenseRejected.class, result);
         DispenseRejected rejected = (DispenseRejected) result;
@@ -113,6 +134,9 @@ class PharmacyTest {
         assertTrue(kofi.history().isEmpty(), "Customer history remains empty");
     }
 
+    /**
+     * Scenario: Quantities <= 0 are rejected immediately.
+     */
     @Test
     @DisplayName("5. Non-positive quantities (<= 0) are rejected for dispense and restock")
     void testNonPositiveQuantitiesRejected() {
@@ -133,6 +157,10 @@ class PharmacyTest {
         assertTrue(pharmacy.getTransactions().isEmpty());
     }
 
+    /**
+     * Scenario: 100 randomized operations with random positive/negative quantities.
+     * Rule: Stock must NEVER fall below zero at any point.
+     */
     @Test
     @DisplayName("6. Invariant verification: Stock never falls below zero across random operations")
     void testStockNeverNegativeUnderRandomOperations() {
@@ -152,6 +180,10 @@ class PharmacyTest {
         }
     }
 
+    /**
+     * Scenario: Tampering with returned collections from outside.
+     * Rule: Throws UnsupportedOperationException, preserving encapsulation.
+     */
     @Test
     @DisplayName("7. Encapsulation: Leaked collections cannot be modified externally")
     void testEncapsulationAndImmutability() {
@@ -174,6 +206,9 @@ class PharmacyTest {
                 "customer.history() must return an unmodifiable list");
     }
 
+    /**
+     * Scenario: Customer types own their discounts.
+     */
     @Test
     @DisplayName("8. Discount belongs to the Customer type")
     void testDiscountOwnedByCustomerType() {
@@ -184,6 +219,9 @@ class PharmacyTest {
                 "Registered customer must require a valid phone number");
     }
 
+    /**
+     * Scenario: Adding ControlledMedication in test scope with ZERO edits to existing production classes.
+     */
     @Test
     @DisplayName("9. Extensibility: Add CONTROLLED category with ZERO edits to existing classes")
     void testControlledMedicationExtensionWithoutEditingExistingClasses() {

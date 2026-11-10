@@ -1,8 +1,14 @@
 package pharmacy.model;
 
 /**
- * Over-the-counter (OTC) medication.
- * General retail medicines (e.g. Paracetamol) that do not require a doctor's prescription.
+ * An over-the-counter (OTC) medication that anyone can purchase without a doctor's prescription.
+ *
+ * <p><b>Why this exists:</b> Separates general retail pharmaceuticals (e.g. pain relievers, vitamins)
+ * from prescription medicines so that prescriber validation is unnecessary.
+ *
+ * <p><b>Real Scenario:</b>
+ * Kofi Mensah buys 2 packets of Paracetamol 500mg (price 12.50). Because requiresPrescriber() is false,
+ * dispensing succeeds immediately with a null prescriber for GHS 25.0.
  */
 public class OtcMedication extends Medication {
 

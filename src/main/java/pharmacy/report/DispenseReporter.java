@@ -8,13 +8,21 @@ import pharmacy.service.DispenseResult;
 import pharmacy.service.DispenseSuccess;
 
 /**
- * Console reporter that formats system outputs matching the legacy CLI contract.
- * 
- * Engineering Decision (ADR-001 & ADR-005):
- * Removes console printing logic from domain entities while maintaining byte-exact output.
+ * Handles formatted console printing matching the exact legacy CLI output contract.
+ *
+ * <p><b>Why this exists:</b> Separates console output formatting (I/O) from domain business logic.
+ * The domain models and Pharmacy coordinator compute outcomes; DispenseReporter simply displays them.
+ *
+ * <p><b>Real Scenario:</b>
+ * Formats: "Dispensed 2 x Paracetamol 500mg to Kofi Mensah for GHS 25.0"
+ * Formats: "Dispensed 1 x Amoxicillin 250mg to Ama Owusu (prescribed by Dr. Boateng) for GHS 28.5"
+ * Formats: "Cannot dispense Amoxicillin 250mg: only 39 in stock, requested 100"
  */
 public class DispenseReporter {
 
+    /**
+     * Prints success or rejection messages in the exact original format.
+     */
     public void reportDispense(DispenseResult result) {
         Objects.requireNonNull(result, "DispenseResult cannot be null");
         if (result instanceof DispenseSuccess s) {
@@ -26,10 +34,18 @@ public class DispenseReporter {
         }
     }
 
+    /**
+     * Formats restock confirmations.
+     * Example: "Restocked 50 x Paracetamol 500mg"
+     */
     public void reportRestock(Medication m, int qty) {
         System.out.println("Restocked " + qty + " x " + m.name());
     }
 
+    /**
+     * Formats the daily end-of-day summary report.
+     * Preserves the preceding blank line and layout from the original contract.
+     */
     public void reportEndOfDay(String pharmacyName, List<Medication> meds, int txCount) {
         System.out.println();
         System.out.println("=== " + pharmacyName + " - end of day ===");
@@ -40,4 +56,3 @@ public class DispenseReporter {
         System.out.println("Transactions today: " + txCount);
     }
 }
-

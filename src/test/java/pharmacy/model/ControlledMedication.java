@@ -1,11 +1,16 @@
 package pharmacy.model;
 
 /**
- * Test-scope Controlled Medication category.
- * 
- * Demonstrates Open-Closed Principle extensibility:
- * This new category is added in test scope and seamlessly works with Pharmacy,
- * requiring ZERO changes to any production classes in src/main.
+ * Test-scope Controlled Medication category (e.g. Morphine).
+ *
+ * <p><b>Why this exists:</b> Proves that Akosua's upcoming CONTROLLED category can be added
+ * with ZERO modifications to existing production classes in src/main.
+ *
+ * <p><b>Scenario:</b>
+ * Morphine 10mg is added with 20 units at GHS 50.00.
+ * Attempting to dispense without a prescriber is rejected.
+ * Dispensing 2 units to Ama Owusu with "Dr. Boateng" succeeds: charges GHS 95.0 (5% loyalty discount),
+ * reduces stock to 18, and records the prescriber on the Transaction ledger.
  */
 public class ControlledMedication extends PrescriptionMedication {
 
@@ -27,4 +32,3 @@ public class ControlledMedication extends PrescriptionMedication {
         return true;
     }
 }
-

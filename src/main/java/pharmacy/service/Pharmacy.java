@@ -11,21 +11,27 @@ import pharmacy.model.Transaction;
 import pharmacy.report.DispenseReporter;
 
 /**
- * Coordinates pharmacy inventory, dispensing operations, and daily reporting.
- * 
- * Engineering Decisions (ADR-005, ADR-006, ADR-007):
- * - Moved to pharmacy.service so all business logic lives in domain packages.
- * - Single responsibility: coordinates operations between entities without leaking mutable state.
- * - Holds all collections privately; returns unmodifiable views.
- * - Enforces business invariants: stock cannot drop below zero; quantities must be positive.
- * - On any rejection: leaves stock untouched and records NO customer history or transaction.
+ * The central coordinator for Akosua's Pharmacy that manages inventory, customers, and dispensing.
+ *
+ * <p><b>Why this exists:</b> The original Pharmacy class was an unencapsulated god class where
+ * pricing, category branching, direct array mutations, and printing were tangled together.
+ * This refactored Pharmacy acts as a clean aggregate coordinator that delegates domain rules to
+ * entities and returns unmodifiable views.
+ *
+ * <p><b>Real Scenario:</b>
+ * Morning routine: Kofi buys 2 Paracetamol (25.0 GHS). Ama buys 1 Amoxicillin (28.5 GHS).
+ * Paracetamol is restocked with 50 units. When Kofi attempts to buy 100 Amoxicillin, only 39
+ * exist in stock. Dispense is rejected, leaving stock untouched at 39 with 3 total transactions.
  */
 public class Pharmacy {
+
     private final String name;
     private final List<Medication> meds = new ArrayList<>();
     private final List<Customer> customers = new ArrayList<>();
     private final List<Transaction> transactions = new ArrayList<>();
     private final DispenseReporter reporter;
+
+    // Instance-scoped counter: prevents static cross-test pollution
     private int nextTransactionId = 1;
 
     public Pharmacy(String name) {
@@ -50,27 +56,33 @@ public class Pharmacy {
     }
 
     /**
-     * Dispenses medication to a customer adhering strictly to domain checks in order:
-     * 1. Prescriber check (null-only preserved from legacy contract)
-     * 2. Quantity positivity check
-     * 3. Stock sufficiency invariant check
+     * Dispenses medicine adhering strictly to the business validation order:
+     * 1. Prescriber check (if required by medication, prescriber must not be null)
+     * 2. Quantity validity (qty > 0)
+     * 3. Stock sufficiency invariant (currentStock >= qty)
+     *
+     * <p><b>Invariant Enforcement:</b>
+     * If stock is 39 and request is 100, the dispense is rejected:
+     * - Stock stays exactly at 39 (the old program went to -61).
+     * - No customer history entry is added.
+     * - No transaction record is created.
      */
     public DispenseResult dispense(Customer c, Medication m, int qty, String prescriber) {
-        // 1. Prescriber check (null-only check preserved per brief)
+        // Step 1: Check prescriber requirement (null-only check preserved from legacy contract)
         if (m.requiresPrescriber() && prescriber == null) {
             DispenseResult rejected = new DispenseRejected("Cannot dispense " + m.name() + " without a prescriber");
             reporter.reportDispense(rejected);
             return rejected;
         }
 
-        // 2. Quantity validity check
+        // Step 2: Check quantity validity (must be positive)
         if (qty <= 0) {
             DispenseResult rejected = new DispenseRejected("Cannot dispense " + m.name() + ": quantity must be positive");
             reporter.reportDispense(rejected);
             return rejected;
         }
 
-        // 3. Stock sufficiency invariant check
+        // Step 3: Check stock sufficiency invariant
         if (!m.hasSufficientStock(qty)) {
             DispenseResult rejected = new DispenseRejected(
                     "Cannot dispense " + m.name() + ": only " + m.currentStock() + " in stock, requested " + qty
@@ -79,28 +91,29 @@ public class Pharmacy {
             return rejected;
         }
 
-        // 4. Pricing calculation: order preserved (price * qty), then discount from customer
+        // Step 4: Calculate total price with customer loyalty discount applied
         Money total = m.price().multiply(qty);
         if (c.discountMultiplier() < 1.0) {
             total = total.applyDiscount(c.discountMultiplier());
         }
 
-        // 5. Stock deduction (in exactly ONE place)
+        // Step 5: Stock deduction occurs in exactly ONE place in the entire system
         m.deductStock(qty);
 
-        // 6. Audit recording (only on success)
+        // Step 6: Record history and audit ledger ONLY upon confirmed success
         c.recordHistory("Got " + qty + " x " + m.name());
         String recordedPrescriber = m.requiresPrescriber() ? prescriber : null;
         transactions.add(new Transaction(nextTransactionId++, c.name(), m.name(), qty, total.amount(), "DISPENSE", recordedPrescriber));
 
-        // 7. Success reporting
+        // Step 7: Output confirmation via reporter
         DispenseResult success = new DispenseSuccess(c, m, qty, recordedPrescriber, total);
         reporter.reportDispense(success);
         return success;
     }
 
     /**
-     * Restocks medication with positive quantity check.
+     * Restocks medication inventory.
+     * Rule: Quantity must be positive. On success, logs a RESTOCK transaction.
      */
     public void restock(Medication m, int qty) {
         if (qty <= 0) {
@@ -112,6 +125,10 @@ public class Pharmacy {
         reporter.reportRestock(m, qty);
     }
 
+    /**
+     * Decision: Return unmodifiable view (Collections.unmodifiableList) to prevent callers
+     * from tampering with the transaction audit ledger.
+     */
     public List<Transaction> getTransactions() {
         return Collections.unmodifiableList(transactions);
     }

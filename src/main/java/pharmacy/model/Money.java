@@ -3,15 +3,22 @@ package pharmacy.model;
 import java.util.Objects;
 
 /**
- * Immutable value type representing monetary currency in Ghana Cedis (GHS).
- * 
- * Engineering Decision (ADR-004):
- * Previous Defect (Rank 10): Primitive double used directly without domain encapsulation.
- * We deliberately maintain double arithmetic internally to guarantee 100% byte-identical
- * output formatting (e.g. 25.0, 28.5) against the baseline contract, while encapsulating
- * calculation order and currency operations.
+ * An immutable monetary amount in Ghana Cedis (GHS).
+ *
+ * <p><b>Why this exists:</b> Eliminates primitive obsession (using raw numbers everywhere for money)
+ * while keeping the exact calculation order and double formatting required by Akosua's original receipts.
+ *
+ * <p><b>Real Scenario:</b>
+ * Paracetamol costs GHS 12.50. Kofi buys 2 packets:
+ * 12.50.multiply(2) -> GHS 25.0.
+ * Ama buys 1 bottle of Amoxicillin at GHS 30.00 with 5% discount:
+ * 30.00.multiply(1).applyDiscount(0.95) -> GHS 28.5.
+ *
+ * <p><b>Java feature note:</b> A <i>final class</i> cannot be subclassed, ensuring its immutability
+ * and formatting guarantees cannot be altered by derived types.
  */
 public final class Money {
+
     private final double amount;
 
     public Money(double amount) {
@@ -31,16 +38,16 @@ public final class Money {
     }
 
     /**
-     * Multiplies unit price by integer quantity.
-     * Arithmetic order preserved: (price * qty)
+     * Decision: Preserve the original arithmetic sequence by calculating (price * qty) first.
+     * Example: GHS 12.50 * 2 -> GHS 25.0.
      */
     public Money multiply(int qty) {
         return new Money(this.amount * qty);
     }
 
     /**
-     * Applies a discount multiplier (e.g. 0.95 for 5% loyalty discount).
-     * Arithmetic order preserved: (price * qty) * multiplier
+     * Decision: Apply loyalty discount multiplier after total line item price is computed.
+     * Example: GHS 30.0 * 0.95 -> GHS 28.5.
      */
     public Money applyDiscount(double multiplier) {
         return new Money(this.amount * multiplier);
@@ -59,11 +66,11 @@ public final class Money {
     }
 
     /**
-     * Preserves exact Java Double.toString() formatting to match legacy stdout contract.
+     * Decision: Delegate directly to Double.toString() so printed totals match the legacy stdout contract.
+     * Example: 25.0 is printed as "25.0", not "25.00".
      */
     @Override
     public String toString() {
         return Double.toString(amount);
     }
 }
-

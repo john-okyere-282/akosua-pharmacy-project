@@ -7,11 +7,19 @@ import pharmacy.model.WalkInCustomer;
 import pharmacy.service.Pharmacy;
 
 /**
- * Akosua's Pharmacy - stock and dispensing tracker.
- * 
- * Entry point remaining in the default package so standard javac and Maven run
- * commands continue to work without reconfiguration. All domain logic is cleanly
- * delegated to pharmacy.service and pharmacy.model.
+ * Main application entry point for Akosua's Pharmacy Stock & Dispensing Tracker.
+ *
+ * <p><b>Why this exists:</b> Resides in the root (default) package to keep the original
+ * README run commands (javac and mvn exec:java) functioning seamlessly without modification.
+ *
+ * <p><b>Scenario Executed:</b>
+ * - Paracetamol 500mg initialized with 100 units at GHS 12.50 (OTC).
+ * - Amoxicillin 250mg initialized with 40 units at GHS 30.00 (Prescription).
+ * - Kofi Mensah (Walk-in) dispenses 2 Paracetamol -> GHS 25.0.
+ * - Ama Owusu (Registered) dispenses 1 Amoxicillin (Dr. Boateng) -> 5% off -> GHS 28.5.
+ * - Paracetamol restocked by 50 units -> 148 remaining.
+ * - Kofi Mensah attempts to dispense 100 Amoxicillin (only 39 exist) -> REJECTED.
+ * - End of day report printed with accurate stock (39 Amoxicillin) and 3 transactions.
  */
 public class PharmacyTracker {
 
@@ -28,12 +36,12 @@ public class PharmacyTracker {
         p.addCustomer(kofi);
         p.addCustomer(ama);
 
-        // a normal morning
+        // A normal morning
         p.dispense(kofi, paracetamol, 2, null);
         p.dispense(ama, amoxicillin, 1, "Dr. Boateng"); // prescription-only
         p.restock(paracetamol, 50);
 
-        // ... and the sort of thing that keeps Akosua up at night:
+        // The sort of thing that keeps Akosua up at night (rejected by rebuilt invariant engine)
         p.dispense(kofi, amoxicillin, 100, "Dr. Boateng"); // far more than we have in stock
 
         p.printReport();

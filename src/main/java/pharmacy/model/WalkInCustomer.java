@@ -1,7 +1,14 @@
 package pharmacy.model;
 
 /**
- * Occasional walk-in customer who pays standard retail prices.
+ * An occasional walk-in customer who pays standard retail prices without discounts.
+ *
+ * <p><b>Why this exists:</b> Separates walk-in patients from registered account holders so
+ * no phone number is required and no loyalty discounts are applied.
+ *
+ * <p><b>Real Scenario:</b>
+ * Kofi Mensah buys 2 Paracetamol packets at GHS 12.50.
+ * Multiplier is 1.0 -> pays standard price GHS 25.0.
  */
 public final class WalkInCustomer extends Customer {
 
@@ -23,4 +30,3 @@ public final class WalkInCustomer extends Customer {
         return 1.0;
     }
 }
-
