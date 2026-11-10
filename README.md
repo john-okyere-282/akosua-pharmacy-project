@@ -26,9 +26,11 @@ mvn exec:java -Dexec.mainClass=PharmacyTracker
 **Or directly with the JDK:**
 
 ```bash
-javac -d target/classes src/main/java/PharmacyTracker.java
+# On Windows / cross-platform:
+javac -d target/classes src/main/java/PharmacyTracker.java src/main/java/Pharmacy.java src/main/java/pharmacy/model/*.java src/main/java/pharmacy/service/*.java src/main/java/pharmacy/report/*.java
 java -cp target/classes PharmacyTracker
 ```
+
 
 Run it first, before you change anything, so you can see how it currently
 behaves. Look carefully at the end-of-day stock report.
