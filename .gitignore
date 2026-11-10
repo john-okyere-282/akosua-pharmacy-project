@@ -13,8 +13,6 @@ target/
 # OS
 .DS_Store
 
-# Prompts & AI context (do not commit)
-.ai/
-.agent/
+# Prompts (do not commit)
 instructions.md
 
