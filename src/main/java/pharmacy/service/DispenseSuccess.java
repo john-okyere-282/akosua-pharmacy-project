@@ -26,3 +26,4 @@ public record DispenseSuccess(
         return true;
     }
 }
+

@@ -4,11 +4,14 @@ import pharmacy.model.OtcMedication;
 import pharmacy.model.PrescriptionMedication;
 import pharmacy.model.RegisteredCustomer;
 import pharmacy.model.WalkInCustomer;
+import pharmacy.service.Pharmacy;
 
 /**
  * Akosua's Pharmacy - stock and dispensing tracker.
  * 
- * Step 4: Customer hierarchy with discount ownership and encapsulated read-only history.
+ * Entry point remaining in the default package so standard javac and Maven run
+ * commands continue to work without reconfiguration. All domain logic is cleanly
+ * delegated to pharmacy.service and pharmacy.model.
  */
 public class PharmacyTracker {
 

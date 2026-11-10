@@ -40,3 +40,4 @@ public class DispenseReporter {
         System.out.println("Transactions today: " + txCount);
     }
 }
+

@@ -1,20 +1,24 @@
 # ADR-001: Medication Hierarchy and Category Modeling
 
 ## Context
-In the original single-file program, medication categories are represented as arbitrary string literals (`"OTC"` or `"PRESCRIPTION"`). The `Pharmacy.dispense()` method contains branching `if-else if` blocks that mix pricing calculations, prescriber validation, stock deductions, and string formatting. Adding a new category like `CONTROLLED` would force modification of `Pharmacy.dispense()` and risk breaking existing logic.
+In the original single-file program, medication categories were represented as arbitrary string literals (`"OTC"` or `"PRESCRIPTION"`). The `Pharmacy.dispense()` method contained branching `if-else if` blocks that mixed pricing calculations, prescriber validation, stock deductions, and string formatting. Adding a new category like `CONTROLLED` forced modification of `Pharmacy.dispense()` and risked breaking existing logic.
 
 ## Options Considered
-1. **Enum Category with Behavior**: An enum defining `OTC`, `PRESCRIPTION`, and `CONTROLLED` with strategy methods. While type-safe, enums are closed at compile time; adding a new category requires modifying the enum file itself.
-2. **Medication with Pluggable Strategy (DispensingPolicy)**: A single `Medication` class injecting a policy interface. This separates behavior cleanly but introduces unnecessary indirection for simple domain entities.
-3. **Sealed Class Hierarchy (Chosen)**: A sealed abstract class `Medication` with explicit subclasses `OtcMedication` and `PrescriptionMedication`.
+1. **Enum Category with Behavior**: An enum defining `OTC` and `PRESCRIPTION` with strategy methods. While type-safe, enums are closed at compile time; adding a new category requires editing the enum file itself.
+2. **Sealed Abstract Class**: A sealed `Medication` permitting `OtcMedication` and `PrescriptionMedication`. While compile-time closed, adding `ControlledMedication` would require opening the `permits` list in `Medication.java`.
+3. **Ordinary Abstract Class (Chosen)**: A standard non-sealed abstract class `Medication` extended by `OtcMedication` and `PrescriptionMedication`.
 
 ## Decision
-I chose Option 3: a sealed abstract class `Medication` extended by `OtcMedication` and `PrescriptionMedication`. Each subclass encapsulates category-specific rules, such as `requiresPrescriber()`.
+I chose Option 3: an ordinary abstract class `Medication` extended by concrete classes `OtcMedication` and `PrescriptionMedication`. 
 
-To keep models clean, I deliberately kept console string formatting OUT of the model classes. The model exposes domain queries and validation rules, while a dedicated reporter handles console output formatting.
+Because Akosua's business told me that `CONTROLLED` substances are actively coming, making `Medication` an ordinary abstract class allows new medication categories (like `ControlledMedication` or `VaccineMedication`) to be introduced in a brand new file with **zero edits** to existing production classes.
 
-`ControlledMedication` is deliberately NOT placed in `src/main`. It is implemented in `src/test` as a test-scope extension to prove that adding a new category requires zero edits to existing production code.
+Meanwhile, I deliberately kept `sealed` on types that are truly closed in the business domain:
+- `DispenseResult` is sealed (`permits DispenseSuccess, DispenseRejected`) because a dispensing attempt in this domain has exactly two logical outcomes: success or rejection.
+- `Customer` is sealed (`permits WalkInCustomer, RegisteredCustomer`) because the pharmacy currently recognizes exactly two loyalty pricing tiers.
+
+Console output formatting is kept strictly OUT of the model classes; a dedicated `DispenseReporter` formats messages.
 
 ## Consequences & Trade-offs
-- **Positive**: Adding a new category satisfies the Open-Closed Principle. Category validation is enforced at compile time.
-- **Accepted Trade-off**: Adding a third category inside the main production code later would require opening the `permits` clause of `Medication` (or unsealing it), but for this lab, keeping the production hierarchy closed protects against arbitrary unsupported types while test-scope proves extensibility.
+- **Positive**: Complete compliance with the Open-Closed Principle. Any new medication category plugs in seamlessly without touching existing code.
+- **Accepted Trade-off**: The compiler does not prevent arbitrary subclasses from being written outside the package, but domain rules (such as prescriber validation and stock invariants) are enforced centrally by `Pharmacy`.

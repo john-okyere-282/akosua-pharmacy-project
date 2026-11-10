@@ -33,3 +33,4 @@ public final class RegisteredCustomer extends Customer {
         return 0.95;
     }
 }
+

@@ -27,3 +27,4 @@ public class ControlledMedication extends PrescriptionMedication {
         return true;
     }
 }
+

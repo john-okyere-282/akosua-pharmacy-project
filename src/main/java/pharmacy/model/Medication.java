@@ -3,14 +3,16 @@ package pharmacy.model;
 import java.util.Objects;
 
 /**
- * Sealed abstract base class for all pharmacy medications.
+ * Abstract base class for all pharmacy medications.
  * 
- * Engineering Decisions (ADR-001 & ADR-002):
- * Previous Defect (Rank 1 & 7): Public mutable stock and String-typed category.
- * Stock is held privately as an immutable StockLevel with no setters.
- * Invariant enforcement: Stock cannot become negative.
+ * Engineering Decision (ADR-001 & ADR-002):
+ * - Declared as an ordinary abstract class (unsealed) so upcoming categories such as
+ *   CONTROLLED or VACCINE can be added by creating a new subclass with ZERO edits
+ *   to existing production files (Open-Closed Principle).
+ * - Stock is held privately as an immutable StockLevel value object with no setters.
+ * - Invariant: Stock cannot become negative.
  */
-public abstract sealed class Medication permits OtcMedication, PrescriptionMedication {
+public abstract class Medication {
     private final int id;
     private final String name;
     private final Money price;

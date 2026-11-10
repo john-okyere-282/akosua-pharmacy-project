@@ -23,3 +23,4 @@ public final class WalkInCustomer extends Customer {
         return 1.0;
     }
 }
+

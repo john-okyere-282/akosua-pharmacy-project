@@ -76,3 +76,4 @@ public final class StockLevel {
         return String.valueOf(units);
     }
 }
+

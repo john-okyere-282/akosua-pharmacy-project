@@ -66,3 +66,4 @@ public final class Money {
         return Double.toString(amount);
     }
 }
+

@@ -1,13 +1,10 @@
 package pharmacy.model;
 
 /**
- * Prescription-only medication.
+ * Prescription-only medication (e.g. Amoxicillin antibiotics).
  * Requires an authorized doctor/prescriber upon dispensing.
- * 
- * Marked non-sealed so specialized prescription categories (such as ControlledMedication)
- * can extend it without modifying core sealed base classes.
  */
-public non-sealed class PrescriptionMedication extends Medication {
+public class PrescriptionMedication extends Medication {
 
     public PrescriptionMedication(int id, String name, Money price, StockLevel initialStock) {
         super(id, name, price, initialStock);

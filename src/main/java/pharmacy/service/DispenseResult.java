@@ -9,3 +9,4 @@ package pharmacy.service;
 public sealed interface DispenseResult permits DispenseSuccess, DispenseRejected {
     boolean isSuccess();
 }
+

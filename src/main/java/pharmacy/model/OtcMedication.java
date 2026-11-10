@@ -2,9 +2,9 @@ package pharmacy.model;
 
 /**
  * Over-the-counter (OTC) medication.
- * Does not require a doctor's prescription.
+ * General retail medicines (e.g. Paracetamol) that do not require a doctor's prescription.
  */
-public final class OtcMedication extends Medication {
+public class OtcMedication extends Medication {
 
     public OtcMedication(int id, String name, Money price, StockLevel initialStock) {
         super(id, name, price, initialStock);

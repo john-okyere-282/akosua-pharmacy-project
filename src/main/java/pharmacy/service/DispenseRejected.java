@@ -15,3 +15,4 @@ public record DispenseRejected(String reason) implements DispenseResult {
         return false;
     }
 }
+

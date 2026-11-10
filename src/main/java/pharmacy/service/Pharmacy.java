@@ -1,3 +1,5 @@
+package pharmacy.service;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,17 +9,16 @@ import pharmacy.model.Medication;
 import pharmacy.model.Money;
 import pharmacy.model.Transaction;
 import pharmacy.report.DispenseReporter;
-import pharmacy.service.DispenseRejected;
-import pharmacy.service.DispenseResult;
-import pharmacy.service.DispenseSuccess;
 
 /**
- * Pharmacy coordinator (Step 8: Enforcing the stock and quantity invariants).
+ * Coordinates pharmacy inventory, dispensing operations, and daily reporting.
  * 
- * Engineering Invariant Enforcements:
- * - Over-dispensing is rejected. Stock remains untouched.
- * - Quantities <= 0 are rejected for both dispense and restock.
- * - On rejection: NO customer history and NO transaction are recorded.
+ * Engineering Decisions (ADR-005, ADR-006, ADR-007):
+ * - Moved to pharmacy.service so all business logic lives in domain packages.
+ * - Single responsibility: coordinates operations between entities without leaking mutable state.
+ * - Holds all collections privately; returns unmodifiable views.
+ * - Enforces business invariants: stock cannot drop below zero; quantities must be positive.
+ * - On any rejection: leaves stock untouched and records NO customer history or transaction.
  */
 public class Pharmacy {
     private final String name;
@@ -49,10 +50,10 @@ public class Pharmacy {
     }
 
     /**
-     * Dispenses medicine to a customer adhering strictly to domain checks in order:
-     * 1. Prescriber requirement check (null-only preserved)
-     * 2. Positive quantity check
-     * 3. Stock sufficiency check
+     * Dispenses medication to a customer adhering strictly to domain checks in order:
+     * 1. Prescriber check (null-only preserved from legacy contract)
+     * 2. Quantity positivity check
+     * 3. Stock sufficiency invariant check
      */
     public DispenseResult dispense(Customer c, Medication m, int qty, String prescriber) {
         // 1. Prescriber check (null-only check preserved per brief)
@@ -99,7 +100,7 @@ public class Pharmacy {
     }
 
     /**
-     * Restocks medicine with positive quantity check.
+     * Restocks medication with positive quantity check.
      */
     public void restock(Medication m, int qty) {
         if (qty <= 0) {

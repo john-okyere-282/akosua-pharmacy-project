@@ -1,3 +1,5 @@
+package pharmacy.service;
+
 import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,14 +15,12 @@ import pharmacy.model.RegisteredCustomer;
 import pharmacy.model.StockLevel;
 import pharmacy.model.Transaction;
 import pharmacy.model.WalkInCustomer;
-import pharmacy.service.DispenseRejected;
-import pharmacy.service.DispenseResult;
-import pharmacy.service.DispenseSuccess;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive verification test suite for Akosua's Pharmacy.
+ * Located in pharmacy.service matching the package of Pharmacy.
  * Covers totals, discounts, invariants, encapsulation, and open-closed extensibility.
  */
 class PharmacyTest {
