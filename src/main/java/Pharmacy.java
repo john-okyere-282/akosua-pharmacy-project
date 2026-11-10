@@ -5,13 +5,14 @@ import pharmacy.model.Medication;
 import pharmacy.model.Transaction;
 
 /**
- * Pharmacy coordinator (Step 4: Customer hierarchy with discount owned by type).
+ * Pharmacy coordinator (Step 5: Immutable Transaction record and instance-scoped IDs).
  */
 public class Pharmacy {
     public String name;
     public List<Medication> meds = new ArrayList<>();
     public List<Customer> customers = new ArrayList<>();
     private List<Transaction> transactions = new ArrayList<>();
+    private int nextTransactionId = 1;
 
     public Pharmacy(String name) {
         this.name = name;
@@ -27,6 +28,8 @@ public class Pharmacy {
 
     public void dispense(Customer c, Medication m, int qty, String prescriber) {
         double total = 0;
+        String recordedPrescriber = null;
+
         if (m.categoryName().equals("OTC")) {
             total = m.price().amount() * qty;
             if (c.discountMultiplier() < 1.0) {
@@ -40,6 +43,7 @@ public class Pharmacy {
                 System.out.println("Cannot dispense " + m.name() + " without a prescriber");
                 return;
             }
+            recordedPrescriber = prescriber;
             total = m.price().amount() * qty;
             if (c.discountMultiplier() < 1.0) {
                 total = total * c.discountMultiplier();
@@ -49,12 +53,12 @@ public class Pharmacy {
                     + " (prescribed by " + prescriber + ") for GHS " + total);
         }
         c.recordHistory("Got " + qty + " x " + m.name());
-        transactions.add(new Transaction(c.name(), m.name(), qty, total, "DISPENSE"));
+        transactions.add(new Transaction(nextTransactionId++, c.name(), m.name(), qty, total, "DISPENSE", recordedPrescriber));
     }
 
     public void restock(Medication m, int qty) {
         m.addStock(qty);
-        transactions.add(new Transaction("(supplier)", m.name(), qty, 0, "RESTOCK"));
+        transactions.add(new Transaction(nextTransactionId++, "(supplier)", m.name(), qty, 0, "RESTOCK", null));
         System.out.println("Restocked " + qty + " x " + m.name());
     }
 

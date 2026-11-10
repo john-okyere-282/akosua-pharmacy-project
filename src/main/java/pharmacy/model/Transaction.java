@@ -1,27 +1,27 @@
 package pharmacy.model;
 
-/**
- * Legacy Transaction model extracted to pharmacy.model in Step 1.
- * 
- * Engineering Note:
- * Previous Defect (Rank 9 & Rank 8): Mutable fields, static counter, and missing prescriber field.
- * In subsequent build steps, this will be converted to an immutable Java record with prescriber auditing.
- */
-public class Transaction {
-    public int id;
-    public String customerName;
-    public String medName;
-    public int qty;
-    public double total;
-    public String type; // "DISPENSE" or "RESTOCK"
-    public static int counter = 1;
+import java.util.Objects;
 
-    public Transaction(String customerName, String medName, int qty, double total, String type) {
-        this.id = counter++;
-        this.customerName = customerName;
-        this.medName = medName;
-        this.qty = qty;
-        this.total = total;
-        this.type = type;
+/**
+ * Immutable audit record representing a pharmacy transaction.
+ * 
+ * Engineering Decisions (ADR-006 & ADR-008):
+ * Previous Defect (Rank 8 & 9): Mutable fields, static counter, and omitted prescriber.
+ * Implemented as a Java record with explicit prescriber tracking (null for OTC/restock)
+ * and instance-scoped ID assignment.
+ */
+public record Transaction(
+        int id,
+        String customerName,
+        String medName,
+        int qty,
+        double total,
+        String type,
+        String prescriber
+) {
+    public Transaction {
+        Objects.requireNonNull(customerName, "Customer name cannot be null");
+        Objects.requireNonNull(medName, "Medication name cannot be null");
+        Objects.requireNonNull(type, "Transaction type cannot be null");
     }
 }
