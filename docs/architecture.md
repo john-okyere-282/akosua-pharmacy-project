@@ -5,6 +5,8 @@ This document explains the architecture of the rebuilt pharmacy management syste
 > [!TIP]
 > A full interactive vector diagram is available at [docs/architecture.drawio](file:///docs/architecture.drawio), which can be opened and edited directly in Draw.io or VS Code / Cursor diagrams extension.
 
+![Akosua's Pharmacy Architecture Diagram](architecture.jpg)
+
 ---
 
 ## 1. Complete Class Diagram of the Final Design

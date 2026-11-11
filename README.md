@@ -35,18 +35,18 @@ While the simulation ran without throwing runtime exceptions, its underlying des
 
 In a clinical pharmacy, incorrect inventory or dispensing records are patient safety hazards and financial liabilities. The legacy code suffered from critical defects, ranked below by business risk:
 
-| Rank | Defect & Severity | Code Location (Original) | Root Cause & Business Risk |
+| Rank | Defect & Severity | Code Location in Starter `PharmacyTracker.java` | Root Cause & Business Risk |
 | :--- | :--- | :--- | :--- |
-| **1** | **Negative Stock Invariant Breach**<br/>`CRITICAL` | `Pharmacy.dispense()`<br/>`m.stock = m.stock - qty;` | **No stock availability check before deduction.** When Kofi requested 100 units of Amoxicillin with only 39 in stock, stock became **-61**, Kofi was billed GHS 3,000.0 for drugs never received, and the audit log recorded a phantom transaction. In real life, patients are given false promises and inventory audits fail catastrophically. |
-| **2** | **No Quantity Validation**<br/>`CRITICAL` | `dispense()` & `restock()` | **Zero checks on `qty <= 0`.** Dispensing a negative quantity would arbitrarily inflate stock and grant the customer cash credits. Restocking negative quantities silently destroyed stock. |
-| **3** | **Unprotected Public Mutable Fields**<br/>`HIGH` | `Medication.stock`<br/>`Customer.phone`<br/>`Customer.history` | **No encapsulation.** Any code could write `medication.stock = -999;` or `customer.history.clear();` bypassing all business logic. |
-| **4** | **Stringly-Typed Domain Categories**<br/>`HIGH` | `Medication.category`<br/>`Customer.kind` | **Raw strings (`"OTC"`, `"PRESCRIPTION"`, `"REGISTERED"`).** A simple typo (`"Prescription"` or `"REGISTRED"`) caused silent branching failures where prescriptions dispensed without doctors and discounts failed to apply. |
-| **5** | **Leaked Mutable Internal Collections**<br/>`HIGH` | `Pharmacy.transactions`<br/>`Pharmacy.getTransactions()` | Direct references to internal `ArrayList` objects were returned. External callers could mutate the pharmacy's legal audit ledger. |
-| **6** | **God Class Anti-Pattern**<br/>`MEDIUM` | `Pharmacy.java` | `Pharmacy` handled discounting, stock arithmetic, validation, audit logging, and stdout formatting. Changes to formatting risked breaking business rules. |
-| **7** | **Prescriber Discarded on Dispensing**<br/>`MEDIUM` | `Pharmacy.dispense()` | The prescriber was checked (`prescriber == null`), but never recorded on the `Transaction`. Akosua had no audit trail of who prescribed antibiotics. |
-| **8** | **Prescriber Validation is Null-Only**<br/>`MEDIUM` | `Pharmacy.dispense()` | Empty strings (`""` or `" "`) passed as valid prescribers. |
-| **9** | **Global Static ID Counters**<br/>`MEDIUM` | `Medication.counter`<br/>`Customer.counter`<br/>`Transaction.counter` | Shared mutable static state across all tests and instances, making test isolation impossible. |
-| **10** | **Binary Floating-Point (`double`) for Money**<br/>`LOW` | `Medication.price`<br/>`Transaction.total` | `double` suffers from IEEE 754 precision rounding issues (e.g. `0.1 + 0.2 = 0.30000000000000004`). |
+| **1** | **Negative Stock Invariant Breach**<br/>`CRITICAL` | `PharmacyTracker.java`<br/>Lines 117, 129 in `Pharmacy.dispense()`<br/>`m.stock = m.stock - qty;` | **No stock availability check before deduction.** When Kofi requested 100 units of Amoxicillin with only 39 in stock, stock became **-61**, Kofi was billed GHS 3,000.0 for drugs never received, and the audit log recorded a phantom transaction. In real life, patients are given false promises and inventory audits fail catastrophically. |
+| **2** | **No Quantity Validation**<br/>`CRITICAL` | `PharmacyTracker.java`<br/>Line 110 in `dispense()`, Line 137 in `restock()` | **Zero checks on `qty <= 0`.** Dispensing a negative quantity would arbitrarily inflate stock and grant the customer cash credits. Restocking negative quantities silently destroyed stock without supplier verification. |
+| **3** | **Unprotected Public Mutable Fields**<br/>`HIGH` | `PharmacyTracker.java`<br/>`Medication.price` (Line 39)<br/>`Medication.stock` (Line 40)<br/>`Customer.phone` (Line 58)<br/>`Customer.history` (Line 60)<br/>`Pharmacy.meds` (Line 93)<br/>`Pharmacy.customers` (Line 94) | **No encapsulation.** Any caller could write `medication.stock = -999;` or `customer.history.clear();` bypassing all validation and business logic. |
+| **4** | **Stringly-Typed Domain Categories**<br/>`HIGH` | `PharmacyTracker.java`<br/>`Medication.category` (Line 41)<br/>`Customer.kind` (Line 57)<br/>`dispense()` Checks (Lines 112, 120, 114, 126) | **Raw strings (`"OTC"`, `"PRESCRIPTION"`, `"REGISTERED"`).** A simple typo (`"Prescription"` or `"REGISTRED"`) caused silent branching failures where prescriptions dispensed without doctors and discounts failed to apply. |
+| **5** | **Leaked Mutable Internal Collections**<br/>`HIGH` | `PharmacyTracker.java`<br/>`Pharmacy.transactions` (Line 95)<br/>`Pharmacy.getTransactions()` (Lines 143–145) | **Direct references to internal `ArrayList` returned.** External callers could execute `p.getTransactions().clear()`, destroying the pharmacy's legal audit trail. |
+| **6** | **God Class Anti-Pattern**<br/>`MEDIUM` | `PharmacyTracker.java`<br/>`class Pharmacy` (Lines 91–156) | **Single class handling multiple distinct concerns.** `Pharmacy` handled discounting, stock arithmetic, validation, audit logging, and stdout formatting. Changes to formatting risked breaking business rules. |
+| **7** | **Prescriber Discarded on Dispensing**<br/>`MEDIUM` | `PharmacyTracker.java`<br/>Line 134 in `Pharmacy.dispense()`<br/>`new Transaction(c.name, m.name, qty, total, "DISPENSE")` | **Audit data loss.** The prescriber was checked on Line 121 (`prescriber == null`), but never passed into the `Transaction` record, leaving zero legal audit trail of who prescribed antibiotics. |
+| **8** | **Prescriber Validation is Null-Only**<br/>`MEDIUM` | `PharmacyTracker.java`<br/>Line 121 in `Pharmacy.dispense()`<br/>`if (prescriber == null)` | **Permits empty strings.** Blank or whitespace strings (`""` or `" "`) passed as valid prescribers. Deliberately preserved in baseline to match original contract. |
+| **9** | **Global Static ID Counters**<br/>`MEDIUM` | `PharmacyTracker.java`<br/>`Medication.counter` (Line 43)<br/>`Customer.counter` (Line 61)<br/>`Transaction.counter` (Line 78) | **Global mutable state.** Static counters shared state across tests and instances, making test isolation and concurrency impossible. |
+| **10** | **Binary Floating-Point (`double`) for Money**<br/>`LOW` | `PharmacyTracker.java`<br/>`Medication.price` (Line 39)<br/>`Transaction.total` (Line 76)<br/>`dispense()` Math (Lines 111, 113, 115, 125, 127) | **IEEE 754 precision rounding issues.** Binary `double` can introduce representation errors (e.g. `0.1 + 0.2 != 0.3`). Encapsulated inside `Money` value type. |
 
 ---
 
@@ -134,7 +134,9 @@ flowchart LR
 
 ## 4. System Architecture & Visual Diagrams
 
-> **Interactive Diagram Available**: The full system architecture, package structure, and invariant flow are designed and saved in [docs/architecture.drawio](file:///docs/architecture.drawio), ready to open in Draw.io, Diagrams.net, or IDE vector previewers.
+![Akosua's Pharmacy System Architecture](docs/architecture.jpg)
+
+> **Visual Schematic & Vector Model**: The full system architecture, package structure, and invariant flow shown above is also saved in editable vector format at [docs/architecture.drawio](file:///docs/architecture.drawio), ready to open in Draw.io, Diagrams.net, or IDE vector previewers.
 
 ### 4.1 Complete Class Diagram
 
