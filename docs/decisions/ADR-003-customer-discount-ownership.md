@@ -15,18 +15,18 @@ In the original code, customer types were tracked as raw strings (`"WALK_IN"` vs
 ```mermaid
 classDiagram
     class Customer {
-        <<sealed abstract>>
+        <<abstract>>
         -String name
         -List~String~ history
         +discountMultiplier()* double
         +history() List~String~
     }
     class WalkInCustomer {
-        +discountMultiplier() 1.0
+        +discountMultiplier() double
     }
     class RegisteredCustomer {
         -String phone
-        +discountMultiplier() 0.95
+        +discountMultiplier() double
     }
     Customer <|-- WalkInCustomer
     Customer <|-- RegisteredCustomer

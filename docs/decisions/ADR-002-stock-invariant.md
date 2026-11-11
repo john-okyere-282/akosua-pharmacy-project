@@ -17,9 +17,10 @@ classDiagram
     class StockLevel {
         -int units
         +StockLevel(int units)
-        +boolean hasSufficient(int qty)
-        +StockLevel deduct(int qty)
-        +StockLevel add(int qty)
+        +units() int
+        +hasSufficient(int qty) boolean
+        +deduct(int qty) StockLevel
+        +add(int qty) StockLevel
     }
     class Medication {
         -StockLevel stock

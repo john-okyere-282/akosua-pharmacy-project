@@ -24,17 +24,17 @@ classDiagram
         +requiresPrescriber()* boolean
     }
     class OtcMedication {
-        +categoryName() "OTC"
-        +requiresPrescriber() false
+        +categoryName() String
+        +requiresPrescriber() boolean
     }
     class PrescriptionMedication {
-        +categoryName() "PRESCRIPTION"
-        +requiresPrescriber() true
+        +categoryName() String
+        +requiresPrescriber() boolean
     }
     class ControlledMedication {
-        <<Future Extension>>
-        +categoryName() "CONTROLLED"
-        +requiresPrescriber() true
+        <<extension>>
+        +categoryName() String
+        +requiresPrescriber() boolean
     }
     Medication <|-- OtcMedication
     Medication <|-- PrescriptionMedication

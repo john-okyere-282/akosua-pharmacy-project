@@ -15,20 +15,20 @@ When a dispense or restock fails (e.g., missing prescriber, insufficient stock, 
 ```mermaid
 classDiagram
     class DispenseResult {
-        <<sealed interface>>
+        <<interface>>
         +isSuccess()* boolean
     }
     class DispenseSuccess {
         <<record>>
-        Customer customer
-        Medication medication
-        int qty
-        String prescriber
-        Money total
+        +Customer customer
+        +Medication medication
+        +int qty
+        +String prescriber
+        +Money total
     }
     class DispenseRejected {
         <<record>>
-        String reason
+        +String reason
     }
     DispenseResult <|-- DispenseSuccess
     DispenseResult <|-- DispenseRejected

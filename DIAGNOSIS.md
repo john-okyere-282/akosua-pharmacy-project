@@ -115,19 +115,19 @@ classDiagram
     class StockLevel {
         -int units
         +StockLevel(int units)
-        +int units()
-        +StockLevel deduct(int qty)
-        +StockLevel add(int qty)
-        +boolean hasSufficient(int qty)
+        +units() int
+        +deduct(int qty) StockLevel
+        +add(int qty) StockLevel
+        +hasSufficient(int qty) boolean
     }
 
     class Money {
         -double amount
         +Money(double amount)
-        +double amount()
-        +Money multiply(int qty)
-        +Money applyDiscount(double multiplier)
-        +String toString()
+        +amount() double
+        +multiply(int qty) Money
+        +applyDiscount(double multiplier) Money
+        +toString() String
     }
 
     class Medication {
@@ -137,15 +137,15 @@ classDiagram
         -Money price
         -StockLevel stock
         +Medication(int id, String name, Money price, StockLevel initialStock)
-        +int id()
-        +String name()
-        +Money price()
-        +int currentStock()
-        +boolean hasSufficientStock(int qty)
-        +void deductStock(int qty)
-        +void addStock(int qty)
-        +String categoryName()*
-        +boolean requiresPrescriber()*
+        +id() int
+        +name() String
+        +price() Money
+        +currentStock() int
+        +hasSufficientStock(int qty) boolean
+        +deductStock(int qty) void
+        +addStock(int qty) void
+        +categoryName()* String
+        +requiresPrescriber()* boolean
     }
 
     class OtcMedication {
@@ -159,7 +159,7 @@ classDiagram
     }
 
     class ControlledMedication {
-        <<Future / Test-Scope>>
+        <<extension>>
         +categoryName() String
         +requiresPrescriber() boolean
     }
@@ -176,11 +176,11 @@ classDiagram
         -String name
         -List~String~ history
         +Customer(int id, String name)
-        +int id()
-        +String name()
-        +double discountMultiplier()*
-        +List~String~ history()
-        +void recordHistory(String entry)
+        +id() int
+        +name() String
+        +discountMultiplier()* double
+        +history() List~String~
+        +recordHistory(String entry) void
     }
 
     class WalkInCustomer {
@@ -190,7 +190,7 @@ classDiagram
     class RegisteredCustomer {
         -String phone
         +RegisteredCustomer(int id, String name, String phone)
-        +String phone()
+        +phone() String
         +discountMultiplier() double
     }
 
@@ -199,35 +199,35 @@ classDiagram
 
     class Transaction {
         <<record>>
-        int id
-        String customerName
-        String medName
-        int qty
-        double total
-        String type
-        String prescriber
+        +int id
+        +String customerName
+        +String medName
+        +int qty
+        +double total
+        +String type
+        +String prescriber
     }
 
     class DispenseResult {
         <<sealed>>
     }
     class DispenseSuccess {
-        Customer customer
-        Medication medication
-        int qty
-        String prescriber
-        Money total
+        +Customer customer
+        +Medication medication
+        +int qty
+        +String prescriber
+        +Money total
     }
     class DispenseRejected {
-        String reason
+        +String reason
     }
     DispenseResult <|-- DispenseSuccess
     DispenseResult <|-- DispenseRejected
 
     class DispenseReporter {
-        +void report(DispenseResult result)
-        +void reportRestock(Medication m, int qty)
-        +void reportEndOfDay(String pharmacyName, List~Medication~ meds, int txCount)
+        +report(DispenseResult result) void
+        +reportRestock(Medication m, int qty) void
+        +reportEndOfDay(String pharmacyName, List~Medication~ meds, int txCount) void
     }
 
     class Pharmacy {
@@ -240,14 +240,14 @@ classDiagram
         -int nextTransactionId
         -DispenseReporter reporter
         +Pharmacy(String name)
-        +void addMedication(Medication m)
-        +void addCustomer(Customer c)
-        +DispenseResult dispense(Customer c, Medication m, int qty, String prescriber)
-        +void restock(Medication m, int qty)
-        +List~Transaction~ getTransactions()
-        +List~Medication~ getMedications()
-        +List~Customer~ getCustomers()
-        +void printReport()
+        +addMedication(Medication m) void
+        +addCustomer(Customer c) void
+        +dispense(Customer c, Medication m, int qty, String prescriber) DispenseResult
+        +restock(Medication m, int qty) void
+        +getTransactions() List~Transaction~
+        +getMedications() List~Medication~
+        +getCustomers() List~Customer~
+        +printReport() void
     }
 
     Pharmacy o-- Medication

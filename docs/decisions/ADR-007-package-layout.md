@@ -27,9 +27,10 @@ flowchart TD
     subgraph Report["pharmacy.report"]
         Rep["DispenseReporter.java (Console I/O)"]
     end
-    Tracker --> Service
-    Service --> Model
-    Service --> Report
+    Tracker --> Pharm
+    Pharm --> Meds
+    Pharm --> Rep
+    Rep --> Meds
 ```
 
 ## Before vs After Comparison

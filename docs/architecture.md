@@ -13,19 +13,19 @@ classDiagram
     class StockLevel {
         -int units
         +StockLevel(int units)
-        +int units()
-        +boolean hasSufficient(int qty)
-        +StockLevel deduct(int qty)
-        +StockLevel add(int qty)
+        +units() int
+        +hasSufficient(int qty) boolean
+        +deduct(int qty) StockLevel
+        +add(int qty) StockLevel
     }
 
     class Money {
         -double amount
         +Money(double amount)
-        +double amount()
-        +Money multiply(int qty)
-        +Money applyDiscount(double multiplier)
-        +String toString()
+        +amount() double
+        +multiply(int qty) Money
+        +applyDiscount(double multiplier) Money
+        +toString() String
     }
 
     class Medication {
@@ -35,15 +35,15 @@ classDiagram
         -Money price
         -StockLevel stock
         +Medication(int id, String name, Money price, StockLevel initialStock)
-        +int id()
-        +String name()
-        +Money price()
-        +int currentStock()
-        +boolean hasSufficientStock(int qty)
-        +void deductStock(int qty)
-        +void addStock(int qty)
-        +String categoryName()*
-        +boolean requiresPrescriber()*
+        +id() int
+        +name() String
+        +price() Money
+        +currentStock() int
+        +hasSufficientStock(int qty) boolean
+        +deductStock(int qty) void
+        +addStock(int qty) void
+        +categoryName()* String
+        +requiresPrescriber()* boolean
     }
 
     class OtcMedication {
@@ -57,7 +57,7 @@ classDiagram
     }
 
     class ControlledMedication {
-        <<Test-Scope Extension>>
+        <<extension>>
         +categoryName() String
         +requiresPrescriber() boolean
     }
@@ -69,17 +69,17 @@ classDiagram
     Medication *-- Money
 
     class Customer {
-        <<sealed abstract>>
+        <<abstract>>
         -int id
         -String name
         -List~String~ history
         +Customer(int id, String name)
-        +int id()
-        +String name()
-        +List~String~ history()
-        +void recordHistory(String entry)
-        +String kind()*
-        +double discountMultiplier()*
+        +id() int
+        +name() String
+        +history() List~String~
+        +recordHistory(String entry) void
+        +kind()* String
+        +discountMultiplier()* double
     }
 
     class WalkInCustomer {
@@ -90,7 +90,7 @@ classDiagram
     class RegisteredCustomer {
         -String phone
         +RegisteredCustomer(int id, String name, String phone)
-        +String phone()
+        +phone() String
         +kind() String
         +discountMultiplier() double
     }
@@ -100,43 +100,43 @@ classDiagram
 
     class Transaction {
         <<record>>
-        int id
-        String customerName
-        String medName
-        int qty
-        double total
-        String type
-        String prescriber
+        +int id
+        +String customerName
+        +String medName
+        +int qty
+        +double total
+        +String type
+        +String prescriber
     }
 
     class DispenseResult {
-        <<sealed interface>>
-        +boolean isSuccess()*
+        <<interface>>
+        +isSuccess()* boolean
     }
 
     class DispenseSuccess {
         <<record>>
-        Customer customer
-        Medication medication
-        int qty
-        String prescriber
-        Money total
-        +boolean isSuccess()
+        +Customer customer
+        +Medication medication
+        +int qty
+        +String prescriber
+        +Money total
+        +isSuccess() boolean
     }
 
     class DispenseRejected {
         <<record>>
-        String reason
-        +boolean isSuccess()
+        +String reason
+        +isSuccess() boolean
     }
 
     DispenseResult <|-- DispenseSuccess
     DispenseResult <|-- DispenseRejected
 
     class DispenseReporter {
-        +void reportDispense(DispenseResult result)
-        +void reportRestock(Medication m, int qty)
-        +void reportEndOfDay(String pharmacyName, List~Medication~ meds, int txCount)
+        +reportDispense(DispenseResult result) void
+        +reportRestock(Medication m, int qty) void
+        +reportEndOfDay(String pharmacyName, List~Medication~ meds, int txCount) void
     }
 
     class Pharmacy {
@@ -148,18 +148,18 @@ classDiagram
         -int nextTransactionId
         +Pharmacy(String name)
         +Pharmacy(String name, DispenseReporter reporter)
-        +void addMedication(Medication m)
-        +void addCustomer(Customer c)
-        +DispenseResult dispense(Customer c, Medication m, int qty, String prescriber)
-        +void restock(Medication m, int qty)
-        +List~Transaction~ getTransactions()
-        +List~Medication~ getMedications()
-        +List~Customer~ getCustomers()
-        +void printReport()
+        +addMedication(Medication m) void
+        +addCustomer(Customer c) void
+        +dispense(Customer c, Medication m, int qty, String prescriber) DispenseResult
+        +restock(Medication m, int qty) void
+        +getTransactions() List~Transaction~
+        +getMedications() List~Medication~
+        +getCustomers() List~Customer~
+        +printReport() void
     }
 
     class PharmacyTracker {
-        +main(String[] args)$
+        +main(String[] args)$ void
     }
 
     Pharmacy o-- Medication
@@ -208,12 +208,15 @@ flowchart TD
         Reporter["DispenseReporter.java"]
     end
 
-    Tracker --> Service
-    Tracker --> Model
-    Service --> Model
-    Service --> Report
-    Report --> Model
-    Report --> Service
+    Tracker --> Pharmacy
+    Tracker --> Med
+    Pharmacy --> Med
+    Pharmacy --> Cust
+    Pharmacy --> Tx
+    Pharmacy --> Reporter
+    Pharmacy --> DResult
+    Reporter --> Med
+    Reporter --> DResult
 ```
 
 ### Plain Explanation:
@@ -301,14 +304,14 @@ The business requires validation checks to occur in a specific, deterministic or
 flowchart TD
     Start(["Call: dispense(customer, med, qty, prescriber)"]) --> CheckPrescriber{"Is prescriber required<br/>AND prescriber == null?"}
     
-    CheckPrescriber -- Yes --> RejectPrescriber["Reject: 'Cannot dispense med without a prescriber'<br/>(Leave stock untouched; record no transaction)"]
-    CheckPrescriber -- No --> CheckQty{"Is qty <= 0?"}
+    CheckPrescriber -->|Yes| RejectPrescriber["Reject: 'Cannot dispense med without a prescriber'<br/>(Leave stock untouched; record no transaction)"]
+    CheckPrescriber -->|No| CheckQty{"Is qty <= 0?"}
     
-    CheckQty -- Yes --> RejectQty["Reject: 'Cannot dispense med: quantity must be positive'<br/>(Leave stock untouched; record no transaction)"]
-    CheckQty -- No --> CheckStock{"Does med have sufficient stock?<br/>(currentStock >= qty)"}
+    CheckQty -->|Yes| RejectQty["Reject: 'Cannot dispense med: quantity must be positive'<br/>(Leave stock untouched; record no transaction)"]
+    CheckQty -->|No| CheckStock{"Does med have sufficient stock?<br/>(currentStock >= qty)"}
     
-    CheckStock -- No --> RejectStock["Reject: 'Cannot dispense med: only N in stock, requested qty'<br/>(Leave stock untouched; record no transaction)"]
-    CheckStock -- Yes --> ApplyDeduction["1. Calculate total with customer discount<br/>2. Deduct stock in ONE place: med.deductStock(qty)<br/>3. Record customer history<br/>4. Append immutable Transaction record<br/>5. Report DispenseSuccess"]
+    CheckStock -->|No| RejectStock["Reject: 'Cannot dispense med: only N in stock, requested qty'<br/>(Leave stock untouched; record no transaction)"]
+    CheckStock -->|Yes| ApplyDeduction["1. Calculate total with customer discount<br/>2. Deduct stock in ONE place: med.deductStock(qty)<br/>3. Record customer history<br/>4. Append immutable Transaction record<br/>5. Report DispenseSuccess"]
 
     RejectPrescriber --> Done(["End Operation"])
     RejectQty --> Done
@@ -361,5 +364,5 @@ flowchart TD
         NewRep["Decoupled Console Reporter<br/>(DispenseReporter)"]
     end
 
-    Old -.->|Refactored Into| New
+    OldGod -.->|Refactored Into| NewCoord
 ```
