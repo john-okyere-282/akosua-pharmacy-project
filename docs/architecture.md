@@ -1,6 +1,9 @@
 # System Architecture: Akosua's Pharmacy
 
-This document explains the architecture of the rebuilt pharmacy management system using visual diagrams and plain-language descriptions.
+This document explains the architecture of the rebuilt pharmacy management system using visual diagrams, Draw.io schematics, and plain-language descriptions.
+
+> [!TIP]
+> A full interactive vector diagram is available at [docs/architecture.drawio](file:///docs/architecture.drawio), which can be opened and edited directly in Draw.io or VS Code / Cursor diagrams extension.
 
 ---
 

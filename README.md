@@ -134,6 +134,8 @@ flowchart LR
 
 ## 4. System Architecture & Visual Diagrams
 
+> **Interactive Diagram Available**: The full system architecture, package structure, and invariant flow are designed and saved in [docs/architecture.drawio](file:///docs/architecture.drawio), ready to open in Draw.io, Diagrams.net, or IDE vector previewers.
+
 ### 4.1 Complete Class Diagram
 
 ```mermaid
