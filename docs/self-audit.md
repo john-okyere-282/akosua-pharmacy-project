@@ -1,8 +1,8 @@
 # Comprehensive Self-Audit & Reviewer Evaluation
 
-**Evaluator**: Reviewer Agent  
+**Evaluator**: Lead Engineer (Self-Audit & Quality Review)  
 **Subject**: Akosua's Pharmacy Refactoring Project  
-**Target Standard**: University Lab Rubric (100 Points Total)
+**Target Standard**: Engineering Lab Rubric (100 Points Total)
 
 ---
 

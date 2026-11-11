@@ -13,7 +13,8 @@ target/
 # OS
 .DS_Store
 
-# Prompts (do not commit)
+# Prompts and internal configs (do not commit)
 instructions.md
 instruction.md
+.ai/
 
