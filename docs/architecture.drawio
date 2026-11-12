@@ -119,7 +119,7 @@
           <mxGeometry x="30" y="640" width="300" height="110" as="geometry" />
         </mxCell>
 
-        <mxCell id="step_rubric" value="Lab Rubric Score: 100/100&#xa;• Diagnosis: 20/20&#xa;• Rebuilt Structure: 25/25&#xa;• Design Reasoning: 20/20&#xa;• Behaviour Preservation: 20/20&#xa;• Improvement Beyond Brief: 15/15" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#8B5CF6;fontStyle=1;fontColor=#4C1D95;fontSize=11;" vertex="1" parent="box_flow">
+        <mxCell id="step_guarantees" value="Core Domain Guarantees&#xa;• Invariant: stock.units >= 0 strictly enforced&#xa;• Illegal states unrepresentable in memory&#xa;• Atomic execution: Rejections yield 0 mutation&#xa;• Instance sequences eliminate test ID collision&#xa;• Pre-armed prescriber tracking on ledger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#475569;fontStyle=1;fontColor=#1E293B;fontSize=11;" vertex="1" parent="box_flow">
           <mxGeometry x="30" y="785" width="300" height="100" as="geometry" />
         </mxCell>
 
