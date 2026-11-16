@@ -1,4 +1,4 @@
-# Akosua's Pharmacy — Stock and Dispensing Tracker
+# Akosua's Pharmacy - Stock and Dispensing Tracker
 
 A production-grade, object-oriented refactoring of Akosua's Pharmacy stock and dispensing system in Accra, Ghana. This project transitions a fragile, single-file legacy intern script into a robust, extensible, and fully-tested domain model built with **Java 21**.
 
@@ -397,7 +397,7 @@ I documented each architectural decision in [docs/decisions/](file:///docs/decis
 ### 5. Domain Results & Reporting Decoupling ([ADR-005](file:///docs/decisions/ADR-005-dispense-failure-handling.md))
 - **Decision**: Sealed `DispenseResult` (`DispenseSuccess` / `DispenseRejected`) paired with `DispenseReporter`.
 - **Alternatives Considered**: Throwing `InsufficientStockException` or printing errors directly inside `Pharmacy`.
-- **Why It Is Best**: In a retail POS system, a customer requesting more stock than available is a normal, expected business outcome—not an exceptional JVM event. Throwing exceptions adds execution overhead and clutters control flow. Separating `DispenseReporter` ensures `Pharmacy` can be used in web, API, or GUI contexts without printing to stdout.
+- **Why It Is Best**: In a retail POS system, a customer requesting more stock than available is a normal, expected business outcome-not an exceptional JVM event. Throwing exceptions adds execution overhead and clutters control flow. Separating `DispenseReporter` ensures `Pharmacy` can be used in web, API, or GUI contexts without printing to stdout.
 - **Trade-off & Engineering Thought**: Adds two record types and a sealed interface instead of a simple boolean, but dramatically elevates modularity and testability.
 
 ### 6. Instance-Scoped Sequences ([ADR-006](file:///docs/decisions/ADR-006-id-generation.md))
