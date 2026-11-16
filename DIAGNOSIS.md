@@ -1,7 +1,7 @@
 # Codebase Diagnosis: Akosua's Pharmacy Stock & Dispensing Tracker
 
 ## 1. Executive Summary
-The existing codebase is a single-file prototype that handles medication inventory, customer tracking, dispensing, and daily reporting for Akosua's pharmacy in Accra. Akosua does not trust this system because it permits catastrophic inventory failures—such as dispensing non-existent stock into negative values—while exposing internal state to arbitrary tampering, risking patient safety and financial integrity.
+The existing codebase is a single-file prototype that handles medication inventory, customer tracking, dispensing, and daily reporting for Akosua's pharmacy in Accra. Akosua does not trust this system because it permits catastrophic inventory failuressuch as dispensing non-existent stock into negative valueswhile exposing internal state to arbitrary tampering, risking patient safety and financial integrity.
 
 ---
 
